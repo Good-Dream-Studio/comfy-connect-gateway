@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ComfyUI Connect Gateway - Dashboard</title>
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Vue.js via CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
+  <!-- Axios for HTTP requests -->
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+  <!-- Iconify for icons -->
+  <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
+  <!-- Custom CSS -->
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body class="bg-slate-100 min-h-screen text-slate-800">
+  <div id="app" v-cloak>
+    <!-- Header -->
+    <header class="bg-gradient-to-r from-blue-600 to-indigo-700 text-white shadow-lg">
+      <div class="container mx-auto px-4 py-6">
+        <div class="flex justify-between items-center">
+          <div>
+            <h1 class="text-3xl font-bold">ComfyUI Connect Gateway</h1>
+            <p class="text-blue-100">Monitoring Dashboard</p>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-6">
+      <!-- Real-time System Status Section -->
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-slate-700">Real-time System Status</h2>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <!-- Instances Panel -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-lg">Connected Instances</h3>
+              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated.instances) }}</span>
+            </div>
+            <div v-if="loading.instances" class="animate-pulse flex justify-center py-10">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="text-3xl font-bold">{{ realtime.instances.count }}</div>
+                <div class="flex gap-2">
+                  <div class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs">
+                    {{ realtime.instances.instances.filter(i => !i.busy).length }} Available
+                  </div>
+                  <div class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">
+                    {{ realtime.instances.instances.filter(i => i.busy).length }} Busy
+                  </div>
+                </div>
+              </div>
+              <div class="max-h-64 overflow-auto">
+                <div v-for="instance in realtime.instances.instances" :key="instance.id"
+                  class="border-b border-gray-100 py-2 flex justify-between">
+                  <div>
+                    <div class="flex items-center">
+                      <div :class="{'text-emerald-500': !instance.busy, 'text-amber-500': instance.busy}" class="mr-2">
+                        <iconify-icon icon="material-symbols:circle" width="12"></iconify-icon>
+                      </div>
+                      <span class="font-mono text-sm">{{ instance.id.substring(0, 8) }}...</span>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-1">
+                      Connected {{ timeAgo(instance.connectedAt) }}
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <div class="text-sm">{{ instance.tasksPerformed }} tasks</div>
+                    <div class="text-xs text-gray-500" v-if="instance.avgDuration !== null">
+                      Avg: {{ instance.avgDuration.toFixed(2) }}s
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Queue Panel -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-lg">Task Queue</h3>
+              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated.queue) }}</span>
+            </div>
+            <div v-if="loading.queue" class="animate-pulse flex justify-center py-10">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="text-3xl font-bold">{{ realtime.queue.size }}</div>
+                <div>
+                  <div :class="{
+                                        'bg-emerald-100 text-emerald-800': realtime.queue.size < realtime.queue.maxSize * 0.5,
+                                        'bg-amber-100 text-amber-800': realtime.queue.size >= realtime.queue.maxSize * 0.5 && realtime.queue.size < realtime.queue.maxSize * 0.8,
+                                        'bg-red-100 text-red-800': realtime.queue.size >= realtime.queue.maxSize * 0.8
+                                    }" class="px-2 py-1 rounded text-xs">
+                    {{ Math.round((realtime.queue.size / realtime.queue.maxSize) * 100) }}% of max ({{
+                    realtime.queue.maxSize }})
+                  </div>
+                </div>
+              </div>
+              <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+                <div :class="{
+                                    'bg-emerald-500': realtime.queue.size < realtime.queue.maxSize * 0.5,
+                                    'bg-amber-500': realtime.queue.size >= realtime.queue.maxSize * 0.5 && realtime.queue.size < realtime.queue.maxSize * 0.8,
+                                    'bg-red-500': realtime.queue.size >= realtime.queue.maxSize * 0.8
+                                }" class="h-2.5 rounded-full"
+                  :style="{ width: `${(realtime.queue.size / realtime.queue.maxSize) * 100}%` }"></div>
+              </div>
+              <div class="max-h-64 overflow-auto">
+                <div v-for="(task, index) in realtime.queue.tasks" :key="task.id" class="border-b border-gray-100 py-2">
+                  <div class="flex justify-between">
+                    <div class="font-mono text-sm">{{ task.id.substring(0, 8) }}...</div>
+                    <div class="text-xs bg-gray-100 px-2 py-1 rounded">Queue Position: {{ index + 1 }}</div>
+                  </div>
+                  <div class="text-sm mt-1">{{ task.workflowName }}</div>
+                  <div class="text-xs text-gray-500 mt-1">
+                    Received {{ timeAgo(task.receivedAt) }}
+                  </div>
+                </div>
+                <div v-if="realtime.queue.tasks.length === 0" class="text-center py-8 text-gray-500">
+                  No tasks in queue
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pending Tasks Panel -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="font-bold text-lg">Processing Tasks</h3>
+              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated.pending) }}</span>
+            </div>
+            <div v-if="loading.pending" class="animate-pulse flex justify-center py-10">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="text-3xl font-bold">{{ realtime.pending.count }}</div>
+                <div class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
+                  Currently Processing
+                </div>
+              </div>
+              <div class="max-h-64 overflow-auto">
+                <div v-for="task in realtime.pending.tasks" :key="task.id" class="border-b border-gray-100 py-2">
+                  <div class="flex justify-between">
+                    <div class="font-mono text-sm">{{ task.id.substring(0, 8) }}...</div>
+                    <div class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded" v-if="task.elapsedTime">
+                      {{ task.elapsedTime.toFixed(1) }}s
+                    </div>
+                  </div>
+                  <div class="text-sm mt-1">{{ task.workflowName }}</div>
+                  <div class="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Started {{ timeAgo(task.sentAt) }}</span>
+                    <span>Instance: {{ task.instanceId.substring(0, 8) }}...</span>
+                  </div>
+                </div>
+                <div v-if="realtime.pending.tasks.length === 0" class="text-center py-8 text-gray-500">
+                  No tasks being processed
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Global Metrics -->
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-slate-700">Global Metrics</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div v-for="(metric, key) in globalMetricsFormatted" :key="key"
+            class="bg-white rounded-lg shadow-md p-5 flex flex-col justify-between">
+            <div class="text-gray-500 text-sm">{{ metric.label }}</div>
+            <div class="mt-2">
+              <span class="text-3xl font-bold">{{ metric.value }}</span>
+              <span class="text-sm ml-1" v-if="metric.unit">{{ metric.unit }}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Charts Section -->
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-slate-700">Historical Data</h2>
+
+        <!-- Timeline Chart -->
+        <div class="bg-white rounded-lg shadow-md p-5 mb-4">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Task Timeline</h3>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-gray-500">Group by:</span>
+              <select v-model="timelineGroupBy" @change="fetchTimeline"
+                class="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1">
+                <option value="day">Day</option>
+                <option value="hour">Hour</option>
+                <option value="minute">Minute</option>
+              </select>
+            </div>
+          </div>
+          <div v-if="loading.timeline" class="animate-pulse flex justify-center py-20">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <div v-else>
+            <div class="h-80">
+              <canvas id="timelineChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <!-- Status Breakdown -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <h3 class="font-bold text-lg mb-4">Task Status</h3>
+            <div v-if="loading.status" class="animate-pulse flex justify-center py-20">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else class="h-60">
+              <canvas id="statusChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Workflow Breakdown -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <h3 class="font-bold text-lg mb-4">Workflow Distribution</h3>
+            <div v-if="loading.workflows" class="animate-pulse flex justify-center py-20">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else class="h-60">
+              <canvas id="workflowsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Duration Distribution -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <h3 class="font-bold text-lg mb-4">Task Duration Distribution</h3>
+            <div v-if="loading.durations" class="animate-pulse flex justify-center py-20">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else class="h-60">
+              <canvas id="durationsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Instance Performance -->
+          <div class="bg-white rounded-lg shadow-md p-5">
+            <h3 class="font-bold text-lg mb-4">Instance Performance</h3>
+            <div v-if="loading.instancesPerf" class="animate-pulse flex justify-center py-20">
+              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+            <div v-else class="h-60">
+              <canvas id="instancesPerfChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-gray-800 text-gray-400 py-6">
+      <div class="container mx-auto px-4 text-center text-sm">
+        <p>ComfyUI Connect Gateway - Monitoring Dashboard</p>
+        <p class="mt-2">© 2025 All Rights Reserved</p>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Load utility scripts first -->
+  <script src="js/utils.js"></script>
+  
+  <!-- Load chart scripts -->
+  <script src="js/charts/timeline.js"></script>
+  <script src="js/charts/status.js"></script>
+  <script src="js/charts/workflows.js"></script>
+  <script src="js/charts/durations.js"></script>
+  <script src="js/charts/instances.js"></script>
+  
+  <!-- Load API scripts -->
+  <script src="js/api/realtime.js"></script>
+  <script src="js/api/historical.js"></script>
+  
+  <!-- Load app core scripts -->
+  <script src="js/intervals.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/app.js"></script>
+  
+  <!-- Load main dashboard script -->
+  <script src="dashboard.js"></script>
+</body>
+
+</html>
