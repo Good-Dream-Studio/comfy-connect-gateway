@@ -13,16 +13,10 @@ Dashboard.App = {
   init: function() {
     const app = Vue.createApp({
       setup() {
-        // Setup watchers for timeline group by changes
-        Vue.watch(Dashboard.State.timelineGroupBy, () => {
-          Dashboard.API.Historical.fetchTimeline();
-        });
-
         // Handle component mount
         Vue.onMounted(() => {
           // Fetch initial data
           Dashboard.API.Realtime.fetchAll();
-          Dashboard.API.Historical.fetchAll();
           
           // Setup refresh intervals
           Dashboard.Intervals.setup();
@@ -30,13 +24,10 @@ Dashboard.App = {
 
         // Return all necessary state and methods to the template
         return {
-          // State
-          timelineGroupBy: Dashboard.State.timelineGroupBy,
+          // State - now simplified with consolidated data
           lastUpdated: Dashboard.State.lastUpdated,
           loading: Dashboard.State.loading,
           realtime: Dashboard.State.realtime,
-          history: Dashboard.State.history,
-          globalMetricsFormatted: Dashboard.State.globalMetricsFormatted,
           
           // Utility methods
           timeAgo: Dashboard.Utils.timeAgo,
@@ -44,9 +35,7 @@ Dashboard.App = {
           // Data fetching methods
           refreshAll: function() {
             Dashboard.API.Realtime.fetchAll();
-            Dashboard.API.Historical.fetchAll();
-          },
-          fetchTimeline: Dashboard.API.Historical.fetchTimeline
+          }
         };
       }
     });

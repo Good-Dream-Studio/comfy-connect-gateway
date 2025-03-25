@@ -11,9 +11,6 @@
   <script src="https://cdn.jsdelivr.net/npm/vue@3.3.4/dist/vue.global.js"></script>
   <!-- Axios for HTTP requests -->
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
   <!-- Iconify for icons -->
   <script src="https://code.iconify.design/iconify-icon/1.0.7/iconify-icon.min.js"></script>
   <!-- Custom CSS -->
@@ -43,9 +40,9 @@
           <div class="bg-white rounded-lg shadow-md p-5">
             <div class="flex justify-between items-center mb-4">
               <h3 class="font-bold text-lg">Connected Instances</h3>
-              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated.instances) }}</span>
+              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated) }}</span>
             </div>
-            <div v-if="loading.instances" class="animate-pulse flex justify-center py-10">
+            <div v-if="loading" class="animate-pulse flex justify-center py-10">
               <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <div v-else>
@@ -89,9 +86,9 @@
           <div class="bg-white rounded-lg shadow-md p-5">
             <div class="flex justify-between items-center mb-4">
               <h3 class="font-bold text-lg">Task Queue</h3>
-              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated.queue) }}</span>
+              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated) }}</span>
             </div>
-            <div v-if="loading.queue" class="animate-pulse flex justify-center py-10">
+            <div v-if="loading" class="animate-pulse flex justify-center py-10">
               <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <div v-else>
@@ -138,9 +135,9 @@
           <div class="bg-white rounded-lg shadow-md p-5">
             <div class="flex justify-between items-center mb-4">
               <h3 class="font-bold text-lg">Processing Tasks</h3>
-              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated.pending) }}</span>
+              <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated) }}</span>
             </div>
-            <div v-if="loading.pending" class="animate-pulse flex justify-center py-10">
+            <div v-if="loading" class="animate-pulse flex justify-center py-10">
               <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
             </div>
             <div v-else>
@@ -172,125 +169,20 @@
           </div>
         </div>
       </section>
-
-      <!-- Global Metrics -->
-      <section class="mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-slate-700">Global Metrics</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div v-for="(metric, key) in globalMetricsFormatted" :key="key"
-            class="bg-white rounded-lg shadow-md p-5 flex flex-col justify-between">
-            <div class="text-gray-500 text-sm">{{ metric.label }}</div>
-            <div class="mt-2">
-              <span class="text-3xl font-bold">{{ metric.value }}</span>
-              <span class="text-sm ml-1" v-if="metric.unit">{{ metric.unit }}</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Charts Section -->
-      <section class="mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-slate-700">Historical Data</h2>
-
-        <!-- Timeline Chart -->
-        <div class="bg-white rounded-lg shadow-md p-5 mb-4">
-          <div class="flex justify-between items-center mb-4">
-            <h3 class="font-bold text-lg">Task Timeline</h3>
-            <div class="flex items-center gap-2">
-              <span class="text-xs text-gray-500">Group by:</span>
-              <select v-model="timelineGroupBy" @change="fetchTimeline"
-                class="text-xs bg-gray-100 border border-gray-300 rounded px-2 py-1">
-                <option value="day">Day</option>
-                <option value="hour">Hour</option>
-                <option value="minute">Minute</option>
-              </select>
-            </div>
-          </div>
-          <div v-if="loading.timeline" class="animate-pulse flex justify-center py-20">
-            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-          <div v-else>
-            <div class="h-80">
-              <canvas id="timelineChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <!-- Status Breakdown -->
-          <div class="bg-white rounded-lg shadow-md p-5">
-            <h3 class="font-bold text-lg mb-4">Task Status</h3>
-            <div v-if="loading.status" class="animate-pulse flex justify-center py-20">
-              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div v-else class="h-60">
-              <canvas id="statusChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Workflow Breakdown -->
-          <div class="bg-white rounded-lg shadow-md p-5">
-            <h3 class="font-bold text-lg mb-4">Workflow Distribution</h3>
-            <div v-if="loading.workflows" class="animate-pulse flex justify-center py-20">
-              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div v-else class="h-60">
-              <canvas id="workflowsChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Duration Distribution -->
-          <div class="bg-white rounded-lg shadow-md p-5">
-            <h3 class="font-bold text-lg mb-4">Task Duration Distribution</h3>
-            <div v-if="loading.durations" class="animate-pulse flex justify-center py-20">
-              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div v-else class="h-60">
-              <canvas id="durationsChart"></canvas>
-            </div>
-          </div>
-
-          <!-- Instance Performance -->
-          <div class="bg-white rounded-lg shadow-md p-5">
-            <h3 class="font-bold text-lg mb-4">Instance Performance</h3>
-            <div v-if="loading.instancesPerf" class="animate-pulse flex justify-center py-20">
-              <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-            <div v-else class="h-60">
-              <canvas id="instancesPerfChart"></canvas>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
-
-    <footer class="bg-gray-800 text-gray-400 py-6">
-      <div class="container mx-auto px-4 text-center text-sm">
-        <p>ComfyUI Connect Gateway - Monitoring Dashboard</p>
-        <p class="mt-2">© 2025 All Rights Reserved</p>
-      </div>
-    </footer>
   </div>
 
   <!-- Load utility scripts first -->
   <script src="js/utils.js"></script>
-  
-  <!-- Load chart scripts -->
-  <script src="js/charts/timeline.js"></script>
-  <script src="js/charts/status.js"></script>
-  <script src="js/charts/workflows.js"></script>
-  <script src="js/charts/durations.js"></script>
-  <script src="js/charts/instances.js"></script>
-  
+
   <!-- Load API scripts -->
   <script src="js/api/realtime.js"></script>
-  <script src="js/api/historical.js"></script>
-  
+
   <!-- Load app core scripts -->
   <script src="js/intervals.js"></script>
   <script src="js/state.js"></script>
   <script src="js/app.js"></script>
-  
+
   <!-- Load main dashboard script -->
   <script src="dashboard.js"></script>
 </body>

@@ -7,30 +7,21 @@ window.Dashboard = window.Dashboard || {};
 
 // Add intervals management
 Dashboard.Intervals = {
-  // Interval references
+  // Interval reference
   realtimeInterval: null,
-  historyInterval: null,
 
   /**
-   * Setup refresh intervals for real-time and historical data
+   * Setup refresh intervals for real-time data
+   * This now uses the consolidated endpoint
    */
   setup: function() {
     // Clear existing intervals
     this.cleanup();
 
-    // Setup new intervals
+    // Setup new interval for consolidated realtime data
     this.realtimeInterval = setInterval(() => {
       Dashboard.API.Realtime.fetchAll();
     }, 1000);
-
-    Dashboard.API.Historical.fetchAll();
-
-    // The refresh is completely messed up, so we are not using it for now, thanks Cline ...
-    /*
-    this.historyInterval = setInterval(() => {
-      Dashboard.API.Historical.fetchAll();
-    }, 5000);
-    */
   },
 
   /**
@@ -38,9 +29,6 @@ Dashboard.Intervals = {
    */
   cleanup: function() {
     if (this.realtimeInterval) clearInterval(this.realtimeInterval);
-    if (this.historyInterval) clearInterval(this.historyInterval);
-    
     this.realtimeInterval = null;
-    this.historyInterval = null;
   }
 };

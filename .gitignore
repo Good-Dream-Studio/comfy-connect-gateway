@@ -1,3 +1,4 @@
 .env
 history.db
 node_modules
+dist

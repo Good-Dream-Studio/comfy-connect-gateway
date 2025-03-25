@@ -15,8 +15,10 @@ export class Cluster extends EventEmitter {
     return [...this.instances]
   }
 
-  public createInstance(id: string, socket: Socket, tags: string[] = []): Instance {
+  public createInstance(id: string, socket: Socket, tags: string[] = [], initialBusy: boolean = false): Instance {
     const instance = new Instance(id, socket, tags)
+    // Set the instance's busy state before adding it
+    instance.busy = initialBusy
     this.addInstance(instance)
     return instance
   }
@@ -26,6 +28,11 @@ export class Cluster extends EventEmitter {
     if (!instance.busy) {
       this.emit('instanceAvailable', instance)
     }
+  }
+  
+  public notifyInstanceAvailable(instance: Instance): void {
+    // Emit the instanceAvailable event for the instance
+    this.emit('instanceAvailable', instance)
   }
 
   public removeInstance(id: string): void {
