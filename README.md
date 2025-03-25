@@ -8,6 +8,7 @@ Create a cluster of your [ComfyUI Connect](https://github.com/Good-Dream-Studio/
 - **✨ Plug and play** - Simply call the `POST /api/connect/workflows/*` endpoint of the gateway instead of your [ComfyUI Connect](https://github.com/Good-Dream-Studio/ComfyUI-Connect)
 - **🔌 Works behind NAT** - Your ComfyUI instances don't need to be directly accessible with IP, they connects directly to the gateway using websocket.
 - **🚀 Dashboard** - Follow the load of your ComfyUI instances in the integrated dashboard
+- **📈 Prometeus Metrics** - Connect your prometeus to `/metrics` and gather load metrics
 
 ![Comfy Connect Gateway Dashboard](https://raw.githubusercontent.com/Good-Dream-Studio/comfy-connect-gateway/refs/heads/main/docs/images/dashboard.png)
 

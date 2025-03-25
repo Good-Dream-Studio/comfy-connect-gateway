@@ -238,6 +238,7 @@ export class Gateway {
 
   ⚡ Gateway started on port ${this.port}
   ⚡ Dashboard: http://localhost:${this.port}/dashboard
+  ⚡ Prometeus Metrics: http://localhost:${this.port}/metrics
   ⚡ Ready to connect ComfyUI instances
   
   Press Ctrl+C to stop

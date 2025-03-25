@@ -23,7 +23,7 @@
     "build": "tsc",
     "prepublishOnly": "npm run build",
     "start": "node ./bin/comfy-connect-gateway.js",
-    "dev": "nodemon --watch src --ext ts,js,html --exec ts-node src/gateway.ts",
+    "dev": "nodemon --watch src --ext ts,js,html --exec ts-node src/dev-server.ts",
     "test": "echo \"No tests specified\""
   },
   "dependencies": {
