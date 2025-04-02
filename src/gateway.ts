@@ -102,8 +102,8 @@ export class Gateway {
       })
     )
 
-    // Consolidated real-time API endpoint
-    this.app.get('/api/realtime', (req, res) => {
+    // Consolidated system status API endpoint
+    this.app.get('/api/status', (req, res) => {
       // Get queue data
       const queueSize = this.queue.size()
       const queuedTasks = this.queue.getTasks()
@@ -136,7 +136,9 @@ export class Gateway {
                     (sum: number, duration: number) => sum + duration,
                     0
                   ) / instance.lastDurations.length
-                : null
+                : null,
+            // Inclure les informations GPU si disponibles
+            gpuInfo: instance.gpuInfo
           }))
         },
         pending: {
@@ -164,11 +166,31 @@ export class Gateway {
   }
 
   private setupSocketIO() {
+    // Map pour suivre les compteurs d'instances par IP
+    const ipCounters = new Map<string, number>();
+
     this.io.on('connection', async (socket: Socket) => {
-      console.log(`⚡ New instance connected: ${socket.id}`)
+      // Obtenir l'adresse IP du client
+      let clientIp = socket.handshake.headers['x-forwarded-for'] || 
+                     socket.handshake.address || 
+                     socket.conn.remoteAddress;
+      
+      // Nettoyer l'IP (enlever la partie IPv6 si présente, ex: ::ffff:127.0.0.1)
+      if (typeof clientIp === 'string') {
+        clientIp = clientIp.replace(/^.*:/, '');
+      }
+      
+      // Incrémenter le compteur pour cette IP
+      const counter = (ipCounters.get(clientIp as string) || 0) + 1;
+      ipCounters.set(clientIp as string, counter);
+      
+      // Créer l'ID au format IP#numéro
+      const instanceId = `${clientIp}#${counter}`;
+      
+      console.log(`⚡ New instance connected: ${instanceId}`)
 
       // Create the instance but set it as busy to prevent it from being available immediately
-      const instance = this.cluster.createInstance(socket.id, socket, [], true)
+      const instance = this.cluster.createInstance(instanceId, socket, [], true)
 
       try {
         // Execute onInstanceConnecting script if defined
@@ -181,7 +203,7 @@ export class Gateway {
         this.cluster.notifyInstanceAvailable(instance)
       } catch (error) {
         console.error(
-          `Error executing onInstanceConnecting script for instance ${socket.id}:`,
+          `Error executing onInstanceConnecting script for instance ${instanceId}:`,
           error
         )
         // In case of error, still mark the instance as available
@@ -189,9 +211,18 @@ export class Gateway {
         this.cluster.notifyInstanceAvailable(instance)
       }
 
+      // Listen for GPU information
+      socket.on('gpu_info', (info) => {
+        try {
+          instance.updateGpuInfo(info)
+        } catch (error) {
+          console.error(`Erreur lors du traitement des informations GPU pour l'instance ${instanceId}:`, error)
+        }
+      })
+
       socket.on('disconnect', () => {
-        console.log(`⚡ Instance disconnected: ${socket.id}`)
-        this.cluster.removeInstance(socket.id)
+        console.log(`⚡ Instance disconnected: ${instanceId}`)
+        this.cluster.removeInstance(instanceId)
       })
     })
   }

@@ -32,9 +32,8 @@
     </header>
 
     <main class="container mx-auto px-4 py-6">
-      <!-- Real-time System Status Section -->
       <section class="mb-8">
-        <h2 class="text-2xl font-bold mb-4 text-slate-700">Real-time System Status</h2>
+        <h2 class="text-2xl font-bold mb-4 text-slate-700">System Status</h2>
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
           <!-- Instances Panel -->
           <div class="bg-white rounded-lg shadow-md p-5">
@@ -47,25 +46,25 @@
             </div>
             <div v-else>
               <div class="flex items-center gap-3 mb-4">
-                <div class="text-3xl font-bold">{{ realtime.instances.count }}</div>
+                <div class="text-3xl font-bold">{{ status.instances.count }}</div>
                 <div class="flex gap-2">
                   <div class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-xs">
-                    {{ realtime.instances.instances.filter(i => !i.busy).length }} Available
+                    {{ status.instances.instances.filter(i => !i.busy).length }} Available
                   </div>
                   <div class="bg-amber-100 text-amber-800 px-2 py-1 rounded text-xs">
-                    {{ realtime.instances.instances.filter(i => i.busy).length }} Busy
+                    {{ status.instances.instances.filter(i => i.busy).length }} Busy
                   </div>
                 </div>
               </div>
               <div class="max-h-64 overflow-auto">
-                <div v-for="instance in realtime.instances.instances" :key="instance.id"
+                <div v-for="instance in status.instances.instances" :key="instance.id"
                   class="border-b border-gray-100 py-2 flex justify-between">
                   <div>
                     <div class="flex items-center">
                       <div :class="{'text-emerald-500': !instance.busy, 'text-amber-500': instance.busy}" class="mr-2">
                         <iconify-icon icon="material-symbols:circle" width="12"></iconify-icon>
                       </div>
-                      <span class="font-mono text-sm">{{ instance.id.substring(0, 8) }}...</span>
+                      <span class="font-mono text-sm">{{ instance.id }}</span>
                     </div>
                     <div class="text-xs text-gray-500 mt-1">
                       Connected {{ timeAgo(instance.connectedAt) }}
@@ -93,30 +92,30 @@
             </div>
             <div v-else>
               <div class="flex items-center gap-3 mb-4">
-                <div class="text-3xl font-bold">{{ realtime.queue.size }}</div>
+                <div class="text-3xl font-bold">{{ status.queue.size }}</div>
                 <div>
                   <div :class="{
-                                        'bg-emerald-100 text-emerald-800': realtime.queue.size < realtime.queue.maxSize * 0.5,
-                                        'bg-amber-100 text-amber-800': realtime.queue.size >= realtime.queue.maxSize * 0.5 && realtime.queue.size < realtime.queue.maxSize * 0.8,
-                                        'bg-red-100 text-red-800': realtime.queue.size >= realtime.queue.maxSize * 0.8
+                                        'bg-emerald-100 text-emerald-800': status.queue.size < status.queue.maxSize * 0.5,
+                                        'bg-amber-100 text-amber-800': status.queue.size >= status.queue.maxSize * 0.5 && status.queue.size < status.queue.maxSize * 0.8,
+                                        'bg-red-100 text-red-800': status.queue.size >= status.queue.maxSize * 0.8
                                     }" class="px-2 py-1 rounded text-xs">
-                    {{ Math.round((realtime.queue.size / realtime.queue.maxSize) * 100) }}% of max ({{
-                    realtime.queue.maxSize }})
+                    {{ Math.round((status.queue.size / status.queue.maxSize) * 100) }}% of max ({{
+                    status.queue.maxSize }})
                   </div>
                 </div>
               </div>
               <div class="w-full bg-gray-200 rounded-full h-2.5 mb-4">
                 <div :class="{
-                                    'bg-emerald-500': realtime.queue.size < realtime.queue.maxSize * 0.5,
-                                    'bg-amber-500': realtime.queue.size >= realtime.queue.maxSize * 0.5 && realtime.queue.size < realtime.queue.maxSize * 0.8,
-                                    'bg-red-500': realtime.queue.size >= realtime.queue.maxSize * 0.8
+                                    'bg-emerald-500': status.queue.size < status.queue.maxSize * 0.5,
+                                    'bg-amber-500': status.queue.size >= status.queue.maxSize * 0.5 && status.queue.size < status.queue.maxSize * 0.8,
+                                    'bg-red-500': status.queue.size >= status.queue.maxSize * 0.8
                                 }" class="h-2.5 rounded-full"
-                  :style="{ width: `${(realtime.queue.size / realtime.queue.maxSize) * 100}%` }"></div>
+                  :style="{ width: `${(status.queue.size / status.queue.maxSize) * 100}%` }"></div>
               </div>
               <div class="max-h-64 overflow-auto">
-                <div v-for="(task, index) in realtime.queue.tasks" :key="task.id" class="border-b border-gray-100 py-2">
+                <div v-for="(task, index) in status.queue.tasks" :key="task.id" class="border-b border-gray-100 py-2">
                   <div class="flex justify-between">
-                    <div class="font-mono text-sm">{{ task.id.substring(0, 8) }}...</div>
+                    <div class="font-mono text-sm">{{ task.id }}...</div>
                     <div class="text-xs bg-gray-100 px-2 py-1 rounded">Queue Position: {{ index + 1 }}</div>
                   </div>
                   <div class="text-sm mt-1">{{ task.workflowName }}</div>
@@ -124,7 +123,7 @@
                     Received {{ timeAgo(task.receivedAt) }}
                   </div>
                 </div>
-                <div v-if="realtime.queue.tasks.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="status.queue.tasks.length === 0" class="text-center py-8 text-gray-500">
                   No tasks in queue
                 </div>
               </div>
@@ -142,15 +141,15 @@
             </div>
             <div v-else>
               <div class="flex items-center gap-3 mb-4">
-                <div class="text-3xl font-bold">{{ realtime.pending.count }}</div>
+                <div class="text-3xl font-bold">{{ status.pending.count }}</div>
                 <div class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">
                   Currently Processing
                 </div>
               </div>
               <div class="max-h-64 overflow-auto">
-                <div v-for="task in realtime.pending.tasks" :key="task.id" class="border-b border-gray-100 py-2">
+                <div v-for="task in status.pending.tasks" :key="task.id" class="border-b border-gray-100 py-2">
                   <div class="flex justify-between">
-                    <div class="font-mono text-sm">{{ task.id.substring(0, 8) }}...</div>
+                    <div class="font-mono text-sm">{{ task.id }}</div>
                     <div class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded" v-if="task.elapsedTime">
                       {{ task.elapsedTime.toFixed(1) }}s
                     </div>
@@ -158,10 +157,10 @@
                   <div class="text-sm mt-1">{{ task.workflowName }}</div>
                   <div class="flex justify-between text-xs text-gray-500 mt-1">
                     <span>Started {{ timeAgo(task.sentAt) }}</span>
-                    <span>Instance: {{ task.instanceId.substring(0, 8) }}...</span>
+                    <span>Instance: {{ task.instanceId }}...</span>
                   </div>
                 </div>
-                <div v-if="realtime.pending.tasks.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="status.pending.tasks.length === 0" class="text-center py-8 text-gray-500">
                   No tasks being processed
                 </div>
               </div>
@@ -169,21 +168,102 @@
           </div>
         </div>
       </section>
+
+      <section class="mb-8">
+        <h2 class="text-2xl font-bold mb-4 text-slate-700">Instances Details</h2>
+        <div class="bg-white rounded-lg shadow-md p-5">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="font-bold text-lg">Instances Monitoring</h3>
+            <span class="text-xs text-gray-500">Last updated: {{ timeAgo(lastUpdated) }}</span>
+          </div>
+          <div v-if="loading" class="animate-pulse flex justify-center py-10">
+            <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+          <div v-else class="overflow-x-auto">
+            <table class="min-w-full table-auto border-collapse">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 text-sm">
+                  <th class="py-2 px-3 text-left w-32">ID</th>
+                  <th class="py-2 px-3 text-left w-28">Status</th>
+                  <th class="py-2 px-3 text-left w-16">Tasks</th>
+                  <th class="py-2 px-3 text-left w-40">GPU Name</th>
+                  <th class="py-2 px-3 text-left w-36">Thermal</th>
+                  <th class="py-2 px-3 text-left w-24">Load</th>
+                  <th class="py-2 px-3 text-left w-48">Memory</th>
+                  <th class="py-2 px-3 text-left w-48">PCIe</th>
+                  <th class="py-2 px-3 text-left w-32">Connected Since</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="instance in status.instances.instances" :key="instance.id" class="border-b border-gray-100">
+                  <td class="py-2 px-3 font-mono text-sm w-32 truncate">{{ instance.id }}</td>
+                  <td class="py-2 px-3 w-28">
+                    <div :class="{'text-emerald-500': !instance.busy, 'text-amber-500': instance.busy}"
+                      class="flex items-center">
+                      <iconify-icon icon="material-symbols:circle" width="12" class="mr-1"></iconify-icon>
+                      {{ instance.busy ? 'Busy' : 'Available' }}
+                    </div>
+                  </td>
+                  <td class="py-2 px-3 w-16">{{ instance.tasksPerformed }}</td>
+                  <td class="py-2 px-3 w-40 truncate"
+                    v-if="instance.gpuInfo && instance.gpuInfo.gpus && instance.gpuInfo.gpus.length > 0">
+                    {{ instance.gpuInfo.gpus[0].name.replace(/^NVIDIA GeForce /i, '') }}
+                  </td>
+                  <td class="py-2 px-3 w-40" v-else>-</td>
+                  <td class="py-2 px-3 w-36"
+                    v-if="instance.gpuInfo && instance.gpuInfo.gpus && instance.gpuInfo.gpus.length > 0">
+                    <div :style="{ color: getTempColor(instance.gpuInfo.gpus[0].temperature) }" class="font-medium">
+                      {{ instance.gpuInfo.gpus[0].temperature }}°C
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      Fan: {{ instance.gpuInfo.gpus[0].fan_speed }}%
+                    </div>
+                  </td>
+                  <td class="py-2 px-3 w-36" v-else>-</td>
+                  <td class="py-2 px-3 w-36"
+                    v-if="instance.gpuInfo && instance.gpuInfo.gpus && instance.gpuInfo.gpus.length > 0">
+                    <div class="font-medium" :style="{ color: getPercentageColor(instance.gpuInfo.gpus[0].utilization.gpu) }">
+                      {{ instance.gpuInfo.gpus[0].utilization.gpu }}%
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ instance.gpuInfo.gpus[0].power.usage }}W
+                    </div>
+                  </td>
+                  <td class="py-2 px-3 w-36" v-else>-</td>
+                  <td class="py-2 px-3 w-48"
+                    v-if="instance.gpuInfo && instance.gpuInfo.gpus && instance.gpuInfo.gpus.length > 0">
+                    <div class="font-medium" :style="{ color: getPercentageColor(instance.gpuInfo.gpus[0].memory.percent) }">
+                      {{ instance.gpuInfo.gpus[0].memory.percent }}%
+                    </div>
+                    <div class="text-xs text-gray-500">
+                      {{ (instance.gpuInfo.gpus[0].memory.used / 1024).toFixed(0) }}GB / {{
+                      (instance.gpuInfo.gpus[0].memory.total / 1024).toFixed(0) }}GB
+                    </div>
+                  </td>
+                  <td class="py-2 px-3 w-48" v-else>-</td>
+                  <td class="py-2 px-3 w-48"
+                    v-if="instance.gpuInfo && instance.gpuInfo.gpus && instance.gpuInfo.gpus.length > 0">
+                    {{ instance.gpuInfo.gpus[0].pcie.width_current }}x Gen{{ instance.gpuInfo.gpus[0].pcie.generation }}
+                    <div class="text-xs text-gray-500">
+                      TX: {{ formatBytes(instance.gpuInfo.gpus[0].pcie.tx_bytes) }} / RX: {{
+                      formatBytes(instance.gpuInfo.gpus[0].pcie.rx_bytes) }}
+                    </div>
+                  </td>
+                  <td class="py-2 px-3 w-48" v-else>-</td>
+                  <td class="py-2 px-3 text-xs text-gray-500 w-32">{{ timeAgo(instance.connectedAt) }}</td>
+                </tr>
+                <tr v-if="status.instances.instances.length === 0">
+                  <td colspan="9" class="py-4 text-center text-gray-500">No connected instances</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
     </main>
   </div>
 
-  <!-- Load utility scripts first -->
-  <script src="js/utils.js"></script>
-
-  <!-- Load API scripts -->
-  <script src="js/api/realtime.js"></script>
-
-  <!-- Load app core scripts -->
-  <script src="js/intervals.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/app.js"></script>
-
-  <!-- Load main dashboard script -->
+  <!-- Load combined dashboard script -->
   <script src="dashboard.js"></script>
 </body>
 

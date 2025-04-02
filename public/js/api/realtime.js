@@ -1,5 +1,5 @@
 /**
- * API functions for fetching real-time data
+ * API functions for fetching system status data
  */
 
 // Extend the Dashboard namespace
@@ -8,10 +8,10 @@ window.Dashboard = window.Dashboard || {};
 // Create API namespace if it doesn't exist
 Dashboard.API = Dashboard.API || {};
 
-// Add realtime API namespace
-Dashboard.API.Realtime = {
+// Add status API namespace
+Dashboard.API.Status = {
   /**
-   * Fetch all real-time data in a single request
+   * Fetch all status data in a single request
    */
   fetchAll: async function() {
     try {
@@ -20,14 +20,14 @@ Dashboard.API.Realtime = {
         Dashboard.State.loading.value = true;
       }
 
-      const response = await axios.get('/api/realtime');
+      const response = await axios.get('/api/status');
       
       // Update all state data at once
-      Dashboard.State.realtime.value = response.data;
+      Dashboard.State.status.value = response.data;
       Dashboard.State.lastUpdated.value = new Date();
       Dashboard.State.initialLoad.value = false;
     } catch (error) {
-      console.error('Error fetching realtime data:', error);
+      console.error('Error fetching status data:', error);
     } finally {
       Dashboard.State.loading.value = false;
     }

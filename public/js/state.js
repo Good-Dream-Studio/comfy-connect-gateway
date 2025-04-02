@@ -16,8 +16,8 @@ Dashboard.State = {
   // Flag to track initial load
   initialLoad: Vue.ref(true),
 
-  // Real-time data (consolidated)
-  realtime: Vue.ref({
+  // System status data (consolidated)
+  status: Vue.ref({
     queue: {
       size: 0,
       maxSize: 0,
