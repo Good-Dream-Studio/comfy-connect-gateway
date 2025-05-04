@@ -1,7 +1,12 @@
 {
   "name": "comfyui-connect-gateway",
   "version": "1.0.0",
-  "description": "Configurable gateway for ComfyUI connections",
+  "description": "Configurable gateway for ComfyUI Connect instances",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Good-Dream-Studio/comfy-connect-gateway.git"
+  },
+  "author": "Ifnot <anael.favre@gmail.com>",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "license": "MIT",
