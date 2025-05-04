@@ -12,9 +12,35 @@ Create a cluster of your [ComfyUI Connect](https://github.com/Good-Dream-Studio/
 
 ![Comfy Connect Gateway Dashboard](https://raw.githubusercontent.com/Good-Dream-Studio/comfy-connect-gateway/refs/heads/main/docs/images/dashboard.png)
 
-## Usage as a package
+## Quick start
 
-You can use the ComfyUI Connect Gateway as a package in your own Node.js project:
+Create a new folder for your project
+
+Add the `comfyui-connect-gateway` npm package using your prefered packet manager :
+
+```bash
+npm install comfy-connect-gateway
+yarn add comfy-connect-gateway
+pnpm add comfy-connect-gateway
+```
+
+Create a `index.js` file with :
+
+```javascript
+const { Gateway } = require('comfyui-connect-gateway');
+
+const gateway = new Gateway({
+  port: 8189
+});
+
+gateway.start();
+```
+
+Run it with `node index.js`
+
+## Usage
+
+Here is more options and features you can use :
 
 ```javascript
 // Using CommonJS
@@ -42,32 +68,21 @@ const dispatcher = gateway.getDispatcher();
 gateway.stop();
 ```
 
-### Configuration Options
+You can populate script object with some hooks, see recipes below, or the [simple log usage example](https://github.com/Good-Dream-Studio/comfy-connect-gateway/blob/main/examples/simple-usage.js)
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `port` | number | 8189 | The port on which the gateway server will listen |
-| `metricsInterval` | number | 5000 | Interval in milliseconds for updating metrics |
-| `script` | object | `{}` | Custom script configuration |
+## Recipe: Warming up instances
 
-## Available Scripts
+Using the `script` configuration object, you can send a warmup workflow to run at instance connect.
 
-The package includes the following scripts that you can run:
+[See the example](https://github.com/Good-Dream-Studio/comfy-connect-gateway/blob/main/examples/warmup.js)
 
-| Script | Description |
-|--------|-------------|
-| `npm run build` | Compiles the TypeScript code to JavaScript |
-| `npm run prepublishOnly` | Runs the build script before publishing |
-| `npm run start` | Starts the Comfy Connect Gateway |
-| `npm run dev` | Runs the gateway in development mode with auto-reload |
-| `npm run test` | Placeholder for tests |
+## Recipe: Auto Scaler
 
-## Auto Scaler
+The gateway includes an Auto Scaler feature for helping you building a scale up / down strategy for your cluster.
 
-The gateway includes an Auto Scaler feature that can dynamically adjust the number of ComfyUI instances based on workload.
+[See the example](https://github.com/Good-Dream-Studio/comfy-connect-gateway/blob/main/examples/auto-scaling.js)
 
-### Auto Scaler Features
-
+**Auto Scaler Features**
 - **Dynamic Scaling**: Automatically scales instances up or down based on queue size
 - **Configurable Thresholds**: Set your preferred queue-to-instance ratios
 - **Cooldown Periods**: Prevents rapid scaling up and down
