@@ -87,3 +87,5 @@ The gateway includes an Auto Scaler feature for helping you building a scale up 
 - **Configurable Thresholds**: Set your preferred queue-to-instance ratios
 - **Cooldown Periods**: Prevents rapid scaling up and down
 - **Min/Max Constraints**: Set boundaries for scaling operations
+
+Made with ❤️ by Ifnot.
