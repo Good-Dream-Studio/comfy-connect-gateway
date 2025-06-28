@@ -47,7 +47,7 @@ export class Gateway {
     this.server = http.createServer(this.app)
     this.io = new SocketIOServer(this.server)
 
-    this.app.use(express.json())
+    this.app.use(express.json({limit: '50mb'}))
     this.app.use(express.static('public')) // Serve static files from 'public' directory
 
     this.cluster = new Cluster()
